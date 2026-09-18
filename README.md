@@ -9,8 +9,8 @@ Sistema profesional de encriptación y desencriptación de archivos en tiempo re
 Para clonar y poner en marcha el proyecto en un entorno local, ejecuta los siguientes comandos en tu terminal:
 
 ```bash
-# 1. Navegar al directorio del proyecto
-cd "[c:/Users/SrRiqui/Documents/Code/Crip T/YonaikelEncrypter](https://github.com/SrRiqui/YonaikelEncrypter)"
+# 1. Clonar el Repositorio
+git clone "(https://github.com/SrRiqui/YonaikelEncrypter.git)"
 
 # 2. Instalar todas las dependencias del proyecto
 npm install
