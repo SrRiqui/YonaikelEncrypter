@@ -10,7 +10,7 @@ Para clonar y poner en marcha el proyecto en un entorno local, ejecuta los sigui
 
 ```bash
 # 1. Navegar al directorio del proyecto
-cd "c:/Users/SrRiqui/Documents/Code/Crip T/YonaikelEncrypter"
+cd "[c:/Users/SrRiqui/Documents/Code/Crip T/YonaikelEncrypter](https://github.com/SrRiqui/YonaikelEncrypter)"
 
 # 2. Instalar todas las dependencias del proyecto
 npm install
