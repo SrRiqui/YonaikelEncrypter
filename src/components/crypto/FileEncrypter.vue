@@ -35,6 +35,9 @@ export default defineComponent({
     const customPrefix = ref<string>('enc');
     const previewObfuscatedName = ref<string>('');
 
+    // HMAC Encrypt-then-MAC (EtM) state
+    const useHmacEtm = ref<boolean>(false);
+
     const updatePreviewName = () => {
       previewObfuscatedName.value = generateObfuscatedFileName({
         style: obfuscateStyle.value,
@@ -156,7 +159,9 @@ export default defineComponent({
           item.status = 'processing';
           item.progress = 35;
 
-          const resultString = await CryptoEngine.encrypt(item.file, item.algorithm, currentKey);
+          const resultString = useHmacEtm.value
+            ? await CryptoEngine.encryptEtm(item.file, currentKey)
+            : await CryptoEngine.encrypt(item.file, item.algorithm, currentKey);
           item.progress = 75;
 
           const blob = new Blob([resultString], { type: 'text/plain' });
@@ -173,7 +178,7 @@ export default defineComponent({
             id: item.id,
             name: outputFileName,
             size: blob.size,
-            algorithm: item.algorithm,
+            algorithm: useHmacEtm.value ? ('aes' as CryptoAlgorithmId) : item.algorithm,
             date: formatCurrentTime(),
             downloadUrl
           });
@@ -214,11 +219,13 @@ export default defineComponent({
       errorMessage.value = '';
       isTextProcessing.value = true;
       try {
-        const result = await CryptoEngine.encryptText(
-          textToEncrypt.value,
-          selectedAlgorithm.value,
-          encryptionKey.value.trim()
-        );
+        const result = useHmacEtm.value
+          ? await CryptoEngine.encryptEtmText(textToEncrypt.value, encryptionKey.value.trim())
+          : await CryptoEngine.encryptText(
+              textToEncrypt.value,
+              selectedAlgorithm.value,
+              encryptionKey.value.trim()
+            );
         encryptedTextResult.value = result;
       } catch (err: any) {
         errorMessage.value = err.message || 'Error al encriptar el texto.';
@@ -301,7 +308,8 @@ export default defineComponent({
       previewObfuscatedName,
       updatePreviewName,
       setObfuscateStyle,
-      hasFileExtension
+      hasFileExtension,
+      useHmacEtm
     };
   }
 });
@@ -472,6 +480,54 @@ export default defineComponent({
 
       <!-- FILE MODE -->
       <div v-if="inputMode === 'file'" class="file-mode-container">
+        <!-- HMAC Encrypt-then-MAC (EtM) Option -->
+        <div class="anonymize-panel" :class="{ active: useHmacEtm }">
+          <div class="anonymize-header" @click="useHmacEtm = !useHmacEtm">
+            <div class="anonymize-info">
+              <div class="anonymize-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+              </div>
+              <div>
+                <div class="anonymize-title-row">
+                  <span class="anonymize-title">Autenticación e Integridad HMAC (Encrypt-then-MAC)</span>
+                  <span class="privacy-badge">EtM SHA-256</span>
+                </div>
+                <p class="anonymize-desc">
+                  Aplica el estándar Encrypt-then-MAC derivando dos claves de 32B independientes ($K_{enc}$ y $K_{mac}$) y validando el tag HMAC-SHA256 con timingSafeEqual antes de descifrar.
+                </p>
+              </div>
+            </div>
+
+            <div class="toggle-switch-wrapper" @click.stop>
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  v-model="useHmacEtm"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Expanded details when active -->
+          <div v-if="useHmacEtm" class="anonymize-body">
+            <div class="etm-specs-grid">
+              <div class="etm-spec-item">
+                <span class="etm-spec-label">Estructura del Payload</span>
+                <code class="etm-spec-val">[IV (16B)] + [Ciphertext (NB)] + [HMAC Tag (32B)]</code>
+              </div>
+              <div class="etm-spec-item">
+                <span class="etm-spec-label">Separación de Claves</span>
+                <code class="etm-spec-val">PBKDF2 / HKDF SHA-256 &rarr; K_enc (32B) + K_mac (32B)</code>
+              </div>
+              <div class="etm-spec-item">
+                <span class="etm-spec-label">Verificación Estricta</span>
+                <code class="etm-spec-val">HMAC(IV || Ciphertext) &bull; timingSafeEqual previo a descifrado</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Obfuscation and Hide Extension Option -->
         <div class="anonymize-panel" :class="{ active: hideFileNameAndExt }">
           <div class="anonymize-header" @click="hideFileNameAndExt = !hideFileNameAndExt; updatePreviewName()">
@@ -1594,25 +1650,25 @@ export default defineComponent({
 .text-muted { color: #64748b; }
 .font-medium { font-weight: 500; }
 
-/* Anonymization Panel & Controls */
+/* Anonymization & Security Panels - Monochrome Palette */
 .anonymize-panel {
   background: rgba(11, 15, 25, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 14px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   overflow: hidden;
   transition: all 0.25s ease;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
 }
 
 .anonymize-panel.active {
-  border-color: rgba(99, 102, 241, 0.45);
-  background: rgba(14, 20, 36, 0.95);
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(16, 20, 32, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 16px rgba(255, 255, 255, 0.04);
 }
 
 .anonymize-header {
@@ -1632,14 +1688,14 @@ export default defineComponent({
 }
 
 .anonymize-icon {
-  background: rgba(99, 102, 241, 0.12);
-  color: #818cf8;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
   padding: 0.6rem;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   flex-shrink: 0;
   margin-top: 0.1rem;
 }
@@ -1660,9 +1716,9 @@ export default defineComponent({
 .privacy-badge {
   font-size: 0.68rem;
   font-weight: 600;
-  background: rgba(16, 185, 129, 0.12);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   padding: 0.15rem 0.5rem;
   border-radius: 6px;
   text-transform: uppercase;
@@ -1676,7 +1732,7 @@ export default defineComponent({
   line-height: 1.4;
 }
 
-/* Toggle Switch */
+/* Toggle Switch - Pure Monochrome */
 .toggle-switch-wrapper {
   flex-shrink: 0;
 }
@@ -1704,7 +1760,7 @@ export default defineComponent({
   background-color: rgba(255, 255, 255, 0.12);
   transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .toggle-slider:before {
@@ -1714,21 +1770,22 @@ export default defineComponent({
   width: 18px;
   left: 2px;
   bottom: 2px;
-  background-color: #cbd5e1;
+  background-color: #94a3b8;
   transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 50%;
 }
 
 .toggle-switch input:checked + .toggle-slider {
-  background-color: #6366f1;
-  border-color: #818cf8;
+  background-color: #ffffff;
+  border-color: #ffffff;
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
   transform: translateX(22px);
-  background-color: #ffffff;
+  background-color: #0b0f19;
 }
 
+/* Anonymize & ETM Body */
 .anonymize-body {
   padding: 1.25rem 1.4rem 1.4rem;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -1769,13 +1826,13 @@ export default defineComponent({
 
 .pattern-btn:hover {
   background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .pattern-btn.active {
-  background: rgba(99, 102, 241, 0.14);
-  border-color: #818cf8;
-  box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.38);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.05);
 }
 
 .pattern-name {
@@ -1792,7 +1849,7 @@ export default defineComponent({
 }
 
 .pattern-btn.active .pattern-example {
-  color: #a5b4fc;
+  color: #cbd5e1;
 }
 
 .prefix-and-preview-row {
@@ -1810,7 +1867,7 @@ export default defineComponent({
   display: flex;
   align-items: center;
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   padding: 0 0.6rem;
 }
@@ -1850,9 +1907,9 @@ export default defineComponent({
 .badge-no-ext-alert {
   font-size: 0.68rem;
   font-weight: 700;
-  background: rgba(244, 63, 94, 0.15);
-  color: #fb7185;
-  border: 1px solid rgba(244, 63, 94, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   padding: 0.12rem 0.45rem;
   border-radius: 5px;
   letter-spacing: 0.02em;
@@ -1863,7 +1920,7 @@ export default defineComponent({
   align-items: center;
   gap: 0.6rem;
   background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 0.45rem 0.75rem;
   color: #94a3b8;
@@ -1873,13 +1930,13 @@ export default defineComponent({
   flex: 1;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.84rem;
-  color: #38bdf8;
+  color: #f8fafc;
   word-break: break-all;
 }
 
 .btn-refresh-preview {
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: #cbd5e1;
   padding: 0.3rem;
   border-radius: 6px;
@@ -1895,13 +1952,45 @@ export default defineComponent({
   color: #ffffff;
 }
 
-/* Badge No Extension in Results Table */
+/* ETM Specs Grid */
+.etm-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.75rem;
+}
+
+.etm-spec-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.etm-spec-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.etm-spec-val {
+  font-size: 0.78rem;
+  color: #f1f5f9;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  word-break: break-all;
+}
+
+/* Badge No Extension in Results Table - Monochrome */
 .badge-no-ext {
   font-size: 0.7rem;
   font-weight: 600;
-  background: rgba(244, 63, 94, 0.12);
-  color: #f43f5e;
-  border: 1px solid rgba(244, 63, 94, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   padding: 0.15rem 0.45rem;
   border-radius: 5px;
   margin-left: 0.5rem;

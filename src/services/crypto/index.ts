@@ -3,9 +3,12 @@ import { Base64CryptoService } from './base64.service';
 import { AesCryptoService } from './aes.service';
 import { CustomLayerCryptoService } from './custom.service';
 
+import { EtmCryptoService } from './etm.service';
+
 export * from './base64.service';
 export * from './aes.service';
 export * from './custom.service';
+export * from './etm.service';
 
 /**
  * Fachada unificada que ejecuta el algoritmo adecuado según el ID seleccionado,
@@ -87,5 +90,44 @@ export class CryptoEngine {
       default:
         throw new Error(`Algoritmo no soportado: ${algorithm}`);
     }
+  }
+
+  /**
+   * Encripta un archivo utilizando el estándar Encrypt-then-MAC (AES-256-CBC + HMAC-SHA256).
+   */
+  public static async encryptEtm(file: File, secret?: string): Promise<string> {
+    return EtmCryptoService.encrypt(file, secret);
+  }
+
+  /**
+   * Desencripta un archivo validando previamente el HMAC con timingSafeEqual.
+   */
+  public static async decryptEtm(
+    content: string,
+    outputFileName: string,
+    secret?: string
+  ): Promise<File> {
+    return EtmCryptoService.decrypt(content, outputFileName, 'application/octet-stream', secret);
+  }
+
+  /**
+   * Encripta texto directamente con HMAC Encrypt-then-MAC.
+   */
+  public static async encryptEtmText(text: string, secret?: string): Promise<string> {
+    return EtmCryptoService.encryptText(text, secret);
+  }
+
+  /**
+   * Desencripta texto validando previamente el HMAC con timingSafeEqual.
+   */
+  public static async decryptEtmText(content: string, secret?: string): Promise<string> {
+    return EtmCryptoService.decryptText(content, secret);
+  }
+
+  /**
+   * Valida si un payload cifrado cumple con el HMAC y clave especificados sin descifrar.
+   */
+  public static async verifyEtm(content: string, secret?: string): Promise<boolean> {
+    return EtmCryptoService.verifyPayload(content, secret || EtmCryptoService.DEFAULT_SECRET);
   }
 }

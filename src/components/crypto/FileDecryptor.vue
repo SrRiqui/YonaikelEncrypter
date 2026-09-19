@@ -30,6 +30,9 @@ export default defineComponent({
     const isProcessing = ref<boolean>(false);
     const isDragging = ref<boolean>(false);
 
+    // HMAC EtM state
+    const useHmacEtm = ref<boolean>(false);
+
     // Text mode state
     const textToDecrypt = ref<string>('');
     const decryptedTextResult = ref<string>('');
@@ -149,7 +152,15 @@ export default defineComponent({
           const baseCleanName = cleanEncryptedFileName(item.file.name);
           const outputName = `decrypted_${baseCleanName}`;
 
-          const resultFile = await CryptoEngine.decrypt(fileContent, item.algorithm, outputName, currentKey);
+          // Autenticación con EtM si está activado o detectado
+          let resultFile: File;
+          const isEtm = useHmacEtm.value || (await CryptoEngine.verifyEtm(fileContent, currentKey));
+
+          if (isEtm) {
+            resultFile = await CryptoEngine.decryptEtm(fileContent, outputName, currentKey);
+          } else {
+            resultFile = await CryptoEngine.decrypt(fileContent, item.algorithm, outputName, currentKey);
+          }
           item.progress = 75;
 
           // Restauración inteligente de extensión si el archivo cifrado no tenía extensión
@@ -218,11 +229,14 @@ export default defineComponent({
       errorMessage.value = '';
       isTextProcessing.value = true;
       try {
-        const result = await CryptoEngine.decryptText(
-          textToDecrypt.value.trim(),
-          selectedAlgorithm.value,
-          currentKey
-        );
+        const isEtm = useHmacEtm.value || (await CryptoEngine.verifyEtm(textToDecrypt.value.trim(), currentKey));
+        const result = isEtm
+          ? await CryptoEngine.decryptEtmText(textToDecrypt.value.trim(), currentKey)
+          : await CryptoEngine.decryptText(
+              textToDecrypt.value.trim(),
+              selectedAlgorithm.value,
+              currentKey
+            );
         decryptedTextResult.value = result;
       } catch (err: any) {
         errorMessage.value = err.message || 'Error: Clave incorrecta o formato de texto cifrado no válido.';
@@ -299,7 +313,8 @@ export default defineComponent({
       processTextDecryption,
       copyDecryptedText,
       downloadDecryptedTextFile,
-      clearTextMode
+      clearTextMode,
+      useHmacEtm
     };
   }
 });
@@ -458,6 +473,54 @@ export default defineComponent({
 
       <!-- FILE MODE -->
       <div v-if="inputMode === 'file'" class="file-mode-container">
+        <!-- HMAC Encrypt-then-MAC (EtM) Verification Option -->
+        <div class="anonymize-panel" :class="{ active: useHmacEtm }">
+          <div class="anonymize-header" @click="useHmacEtm = !useHmacEtm">
+            <div class="anonymize-info">
+              <div class="anonymize-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+              </div>
+              <div>
+                <div class="anonymize-title-row">
+                  <span class="anonymize-title">Validación e Integridad HMAC (Encrypt-then-MAC)</span>
+                  <span class="privacy-badge">EtM SHA-256</span>
+                </div>
+                <p class="anonymize-desc">
+                  Valida obligatoriamente el tag HMAC-SHA256 con timingSafeEqual sobre [IV + Ciphertext] antes de ejecutar cualquier descifrado.
+                </p>
+              </div>
+            </div>
+
+            <div class="toggle-switch-wrapper" @click.stop>
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  v-model="useHmacEtm"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Expanded details when active -->
+          <div v-if="useHmacEtm" class="anonymize-body">
+            <div class="etm-specs-grid">
+              <div class="etm-spec-item">
+                <span class="etm-spec-label">Extracción del Payload</span>
+                <code class="etm-spec-val">IV (primeros 16B) &bull; HMAC Tag (últimos 32B) &bull; Ciphertext</code>
+              </div>
+              <div class="etm-spec-item">
+                <span class="etm-spec-label">Validación Previa</span>
+                <code class="etm-spec-val">crypto.timingSafeEqual(tagRecibido, tagCalculado)</code>
+              </div>
+              <div class="etm-spec-item">
+                <span class="etm-spec-label">Seguridad Contra Manipulación</span>
+                <code class="etm-spec-val">Interrupción inmediata sin descifrar si el HMAC no coincide</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div
           class="dropzone"
           :class="{ dragging: isDragging }"
@@ -1466,4 +1529,182 @@ export default defineComponent({
 
 .text-muted { color: #64748b; }
 .font-medium { font-weight: 500; }
+
+/* Anonymization & Security Panels - Monochrome Palette */
+.anonymize-panel {
+  background: rgba(11, 15, 25, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.anonymize-panel.active {
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(16, 20, 32, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 16px rgba(255, 255, 255, 0.04);
+}
+
+.anonymize-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.4rem;
+  cursor: pointer;
+  user-select: none;
+  gap: 1rem;
+}
+
+.anonymize-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+}
+
+.anonymize-icon {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+  padding: 0.6rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.anonymize-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.anonymize-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.privacy-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.anonymize-desc {
+  font-size: 0.84rem;
+  color: #94a3b8;
+  margin: 0.25rem 0 0;
+  line-height: 1.4;
+}
+
+/* Toggle Switch - Pure Monochrome */
+.toggle-switch-wrapper {
+  flex-shrink: 0;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.12);
+  transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #94a3b8;
+  transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #ffffff;
+  border-color: #ffffff;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(22px);
+  background-color: #0b0f19;
+}
+
+.anonymize-body {
+  padding: 1.25rem 1.4rem 1.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 12, 22, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ETM Specs Grid */
+.etm-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.75rem;
+}
+
+.etm-spec-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.etm-spec-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.etm-spec-val {
+  font-size: 0.78rem;
+  color: #f1f5f9;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  word-break: break-all;
+}
 </style>
