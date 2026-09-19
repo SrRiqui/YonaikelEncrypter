@@ -1596,18 +1596,23 @@ export default defineComponent({
 
 /* Anonymization Panel & Controls */
 .anonymize-panel {
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(11, 15, 25, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 14px;
   margin-bottom: 1.5rem;
   overflow: hidden;
   transition: all 0.25s ease;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
 }
 
 .anonymize-panel.active {
-  border-color: rgba(99, 102, 241, 0.35);
-  background: rgba(15, 23, 42, 0.85);
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.45);
+  background: rgba(14, 20, 36, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.12);
 }
 
 .anonymize-header {
@@ -1724,11 +1729,12 @@ export default defineComponent({
   background-color: #ffffff;
 }
 
-/* Anonymize Body */
 .anonymize-body {
   padding: 1.25rem 1.4rem 1.4rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(0, 0, 0, 0.18);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 12, 22, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
