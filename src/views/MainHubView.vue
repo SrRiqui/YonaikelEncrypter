@@ -84,42 +84,36 @@ export default defineComponent({
 
 .selection-title {
   text-align: center;
-  font-size: 1.75rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 600;
   color: #f1f5f9;
   margin-bottom: 2rem;
+  letter-spacing: -0.02em;
 }
 
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 2rem;
+  gap: 1.75rem;
 }
 
 .action-card {
   position: relative;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(12, 16, 25, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(16px);
-  border-radius: 20px;
-  padding: 2.25rem;
+  border-radius: 16px;
+  padding: 2.25rem 2rem;
   cursor: pointer;
   overflow: hidden;
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s ease;
 }
 
 .action-card:hover {
-  transform: translateY(-6px);
-}
-
-.encrypt-card:hover {
-  border-color: rgba(59, 130, 246, 0.6);
-  box-shadow: 0 15px 35px rgba(37, 99, 235, 0.25);
-}
-
-.decrypt-card:hover {
-  border-color: rgba(16, 185, 129, 0.6);
-  box-shadow: 0 15px 35px rgba(16, 185, 129, 0.25);
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(16, 22, 34, 0.85);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
 }
 
 .card-glow {
@@ -129,16 +123,9 @@ export default defineComponent({
   width: 200%;
   height: 200%;
   opacity: 0;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.4s ease;
   pointer-events: none;
-}
-
-.encrypt-glow {
-  background: radial-gradient(circle at center, rgba(59, 130, 246, 0.15) 0%, transparent 60%);
-}
-
-.decrypt-glow {
-  background: radial-gradient(circle at center, rgba(16, 185, 129, 0.15) 0%, transparent 60%);
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.05) 0%, transparent 65%);
 }
 
 .action-card:hover .card-glow {
@@ -151,50 +138,53 @@ export default defineComponent({
 }
 
 .card-icon-wrapper {
-  width: 60px;
-  height: 60px;
-  border-radius: 16px;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1.5rem;
-  color: white;
+  margin-bottom: 1.25rem;
+  color: #f8fafc;
+  background: #171e2c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.2s ease;
 }
 
-.encrypt-icon {
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
-}
-
-.decrypt-icon {
-  background: linear-gradient(135deg, #059669, #0d9488);
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+.action-card:hover .card-icon-wrapper {
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .card-tag {
   display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #93c5fd;
-  margin-bottom: 0.5rem;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
 }
 
 .green-tag {
-  color: #6ee7b7;
+  color: #94a3b8;
 }
 
 .card-heading {
-  font-size: 1.6rem;
-  font-weight: 700;
+  font-size: 1.35rem;
+  font-weight: 600;
   color: #ffffff;
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.65rem 0;
+  letter-spacing: -0.01em;
 }
 
 .card-description {
-  color: #94a3b8;
-  font-size: 0.95rem;
+  color: #8392a5;
+  font-size: 0.92rem;
   line-height: 1.6;
   margin: 0 0 2rem 0;
 }
@@ -203,16 +193,18 @@ export default defineComponent({
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-weight: 600;
-  color: #60a5fa;
-  transition: gap 0.2s ease;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #cbd5e1;
+  transition: gap 0.2s ease, color 0.2s ease;
 }
 
 .card-footer .green-text {
-  color: #34d399;
+  color: #cbd5e1;
 }
 
 .action-card:hover .card-footer {
-  gap: 0.85rem;
+  color: #ffffff;
+  gap: 0.75rem;
 }
 </style>

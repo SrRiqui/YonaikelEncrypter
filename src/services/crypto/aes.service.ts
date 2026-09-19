@@ -62,4 +62,43 @@ export class AesCryptoService {
       throw new Error('AES: Fallo de autenticación o descifrado (clave incorrecta o datos corruptos).');
     }
   }
+
+  /**
+   * Encripta una cadena de texto directamente con AES-GCM y una clave secreta.
+   */
+  public static async encryptText(text: string, secret: string = this.DEFAULT_SECRET): Promise<string> {
+    const encoder = new TextEncoder();
+    const plainBytes = encoder.encode(text);
+    const key = await this.deriveKey(secret);
+    const iv = crypto.getRandomValues(new Uint8Array(this.IV_LENGTH_BYTES));
+
+    const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, plainBytes);
+
+    const combined = new Uint8Array(iv.length + ciphertext.byteLength);
+    combined.set(iv, 0);
+    combined.set(new Uint8Array(ciphertext), iv.length);
+
+    return bytesToBase64(combined);
+  }
+
+  /**
+   * Desencripta una cadena cifrada y retorna el texto en claro.
+   */
+  public static async decryptText(content: string, secret: string = this.DEFAULT_SECRET): Promise<string> {
+    const combined = base64ToBytes(content);
+    if (combined.length < this.IV_LENGTH_BYTES + 1) {
+      throw new Error('AES: El contenido es demasiado corto para contener el IV y los datos cifrados.');
+    }
+
+    const iv = combined.slice(0, this.IV_LENGTH_BYTES);
+    const ciphertext = combined.slice(this.IV_LENGTH_BYTES);
+    const key = await this.deriveKey(secret);
+
+    try {
+      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+      return new TextDecoder().decode(decrypted);
+    } catch {
+      throw new Error('AES: Fallo de autenticación o descifrado (clave incorrecta o datos corruptos).');
+    }
+  }
 }

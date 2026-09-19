@@ -15,21 +15,22 @@ export default defineComponent({
   data() {
     return {
       config: {
-        particleCount: 4000,
-        textArray: ['Encrypt.', 'Vault.', 'Secure.', 'Protect.', 'Safe.', 'Private.', 'Yonaikel.', 'Shield.', 'Lock.'],
+        particleCount: 3600,
+        textArray: ['Encrypt.', 'Yonaikel.', 'Encrypter.', 'Secure.', 'Protect.', 'Safe.', 'Private.', 'Shield.', 'Lock.'],
         mouseRadius: 0.12,
-        particleSize: 2.2,
-        forceMultiplier: 0.0012,
+        particleSize: 1.8,
+        forceMultiplier: 0.0010,
         returnSpeed: 0.006,
         velocityDamping: 0.94,
         colorMultiplier: 40000,
         saturationMultiplier: 1000,
         textChangeInterval: 7000,
-        rotationForceMultiplier: 0.5
+        rotationForceMultiplier: 0.4
       },
       particles: [] as Particle[],
       currentTextIndex: 0,
       nextTextTimeout: null as any,
+      resizeTimeout: null as any,
       textCoordinates: [] as { x: number; y: number }[],
       mouse: { x: -500, y: -500, radius: 0.12 },
       animationId: 0,
@@ -53,7 +54,21 @@ export default defineComponent({
   beforeUnmount() {
     cancelAnimationFrame(this.animationId);
     clearTimeout(this.nextTextTimeout);
+    clearTimeout(this.resizeTimeout);
     window.removeEventListener('resize', this.handleResize);
+
+    const canvas = this.$refs.canvas as HTMLCanvasElement;
+    if (canvas) {
+      canvas.removeEventListener('mousemove', this.handleMouseMove);
+      canvas.removeEventListener('mouseleave', this.handleMouseLeave);
+    }
+
+    if (this.gl) {
+      if (this.positionBuffer) this.gl.deleteBuffer(this.positionBuffer);
+      if (this.hueBuffer) this.gl.deleteBuffer(this.hueBuffer);
+      if (this.saturationBuffer) this.gl.deleteBuffer(this.saturationBuffer);
+      if (this.program) this.gl.deleteProgram(this.program);
+    }
   },
   methods: {
     initCanvas() {
@@ -70,7 +85,7 @@ export default defineComponent({
       this.createShaders();
       this.createParticles();
 
-      this.gl.clearColor(0.04, 0.06, 0.1, 1);
+      this.gl.clearColor(0.035, 0.045, 0.065, 1);
       this.animate();
       this.nextTextTimeout = setTimeout(this.changeText, this.config.textChangeInterval);
 
@@ -104,17 +119,11 @@ export default defineComponent({
         varying float v_hue;
         varying float v_saturation;
         void main() {
-          float c = v_hue * 6.0;
-          float x = 1.0 - abs(mod(c, 2.0) - 1.0);
-          vec3 color;
-          if (c < 1.0) color = vec3(1.0, x, 0.0);
-          else if (c < 2.0) color = vec3(x, 1.0, 0.0);
-          else if (c < 3.0) color = vec3(0.0, 1.0, x);
-          else if (c < 4.0) color = vec3(0.0, x, 1.0);
-          else if (c < 5.0) color = vec3(x, 0.0, 1.0);
-          else color = vec3(1.0, 0.0, x);
-          vec3 finalColor = mix(vec3(0.3, 0.6, 1.0), color, v_saturation);
-          gl_FragColor = vec4(finalColor, 0.85);
+          vec3 darkSlate = vec3(0.32, 0.38, 0.48);
+          vec3 silverWhite = vec3(0.85, 0.90, 0.96);
+          vec3 particleColor = mix(darkSlate, silverWhite, v_hue);
+          float alpha = mix(0.40, 0.85, v_saturation);
+          gl_FragColor = vec4(particleColor, alpha);
         }
       `;
 
@@ -208,12 +217,15 @@ export default defineComponent({
       this.mouse.y = -500;
     },
     handleResize() {
-      const canvas = this.$refs.canvas as HTMLCanvasElement;
-      if (!canvas || !this.gl) return;
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      this.gl.viewport(0, 0, canvas.width, canvas.height);
-      this.createParticles();
+      clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = setTimeout(() => {
+        const canvas = this.$refs.canvas as HTMLCanvasElement;
+        if (!canvas || !this.gl) return;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        this.gl.viewport(0, 0, canvas.width, canvas.height);
+        this.createParticles();
+      }, 100);
     },
     changeText() {
       this.currentTextIndex = (this.currentTextIndex + 1) % this.config.textArray.length;

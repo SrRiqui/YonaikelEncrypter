@@ -7,10 +7,12 @@ export default defineComponent({
   emits: ['navigate'],
   data() {
     return {
-      originalText: 'Vault Encrypter',
-      displayText: 'Vault Encrypter',
+      originalText: 'Yonaikel Encrypter',
+      displayText: 'Yonaikel Encrypter',
       isEncrypting: false,
       intervalId: 0 as any,
+      scrambleIntervalId: 0 as any,
+      timeouts: [] as any[],
       features: [
         {
           id: 'encrypt',
@@ -44,19 +46,28 @@ export default defineComponent({
   },
   beforeUnmount() {
     clearInterval(this.intervalId);
+    clearInterval(this.scrambleIntervalId);
+    this.timeouts.forEach(t => clearTimeout(t));
+    this.timeouts = [];
   },
   methods: {
     startAnimation() {
       this.intervalId = setInterval(() => {
         this.isEncrypting = true;
-        setTimeout(() => {
+        const t1 = setTimeout(() => {
           this.scrambleText();
+          this.scrambleIntervalId = setInterval(() => {
+            this.scrambleText();
+          }, 80);
         }, 300);
 
-        setTimeout(() => {
+        const t2 = setTimeout(() => {
+          clearInterval(this.scrambleIntervalId);
           this.displayText = this.originalText;
           this.isEncrypting = false;
         }, 1800);
+
+        this.timeouts.push(t1, t2);
       }, 5000);
     },
     scrambleText() {
@@ -133,7 +144,7 @@ export default defineComponent({
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1.5rem;
+  padding: 3.5rem 1.5rem 2.5rem;
   text-align: center;
   position: relative;
   z-index: 1;
@@ -143,98 +154,103 @@ export default defineComponent({
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
-  background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  color: #93c5fd;
-  padding: 0.4rem 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  padding: 0.35rem 0.95rem;
   border-radius: 9999px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 500;
   margin-bottom: 1.75rem;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
 }
 
 .pulse-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: #3b82f6;
-  box-shadow: 0 0 10px #3b82f6;
-  animation: pulse 1.8s infinite ease-in-out;
+  background: #94a3b8;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  animation: pulse 2.2s infinite ease-in-out;
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(0.9); opacity: 0.8; }
-  50% { transform: scale(1.4); opacity: 1; }
+  0%, 100% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.3); opacity: 1; }
 }
 
 .scramble-title {
-  font-size: 3.75rem;
-  font-weight: 800;
-  color: #ffffff;
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #f8fafc;
   margin: 0 0 1.25rem 0;
   letter-spacing: -0.03em;
-  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
 }
 
 .char {
   display: inline-block;
-  transition: all 0.25s ease;
+  transition: color 0.15s ease, transform 0.15s ease;
 }
 
 .char.encrypted {
-  color: #60a5fa;
-  text-shadow: 0 0 15px #3b82f6, 0 0 30px #60a5fa;
-  transform: translateY(-2px);
+  color: #e2e8f0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
 }
 
 .hero-description {
-  max-width: 620px;
+  max-width: 600px;
   color: #94a3b8;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   line-height: 1.6;
   margin: 0 0 2.25rem 0;
 }
 
 .hero-actions {
   display: flex;
-  gap: 1rem;
+  gap: 0.85rem;
   margin-bottom: 3.5rem;
 }
 
 .btn-action {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.85rem 1.75rem;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
+  gap: 0.55rem;
+  padding: 0.8rem 1.6rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-action.primary {
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
-  color: white;
-  border: none;
-  box-shadow: 0 6px 25px rgba(37, 99, 235, 0.4);
+  background: #171e2c;
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
 .btn-action.primary:hover {
+  background: #202a3d;
+  border-color: rgba(255, 255, 255, 0.26);
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.55);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
 }
 
 .btn-action.secondary {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  color: #6ee7b7;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
   backdrop-filter: blur(8px);
 }
 
 .btn-action.secondary:hover {
-  background: rgba(16, 185, 129, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
   transform: translateY(-2px);
 }
 
@@ -246,60 +262,64 @@ export default defineComponent({
 .features {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .feature-card {
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 16, 25, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   backdrop-filter: blur(12px);
-  border-radius: 16px;
-  padding: 1.75rem 1.5rem;
+  border-radius: 14px;
+  padding: 1.5rem 1.4rem;
   text-align: left;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   position: relative;
   overflow: hidden;
 }
 
 .feature-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(59, 130, 246, 0.4);
-  background: rgba(30, 41, 59, 0.75);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(17, 23, 36, 0.85);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .card-badge {
   display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.68rem;
+  font-weight: 600;
   text-transform: uppercase;
-  color: #60a5fa;
-  margin-bottom: 0.75rem;
-  letter-spacing: 0.05em;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  margin-bottom: 0.85rem;
+  letter-spacing: 0.04em;
 }
 
 .feature-card h3 {
   color: #f1f5f9;
-  font-size: 1.2rem;
-  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  margin: 0 0 0.45rem 0;
   font-weight: 600;
 }
 
 .feature-card p {
-  color: #94a3b8;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  color: #8392a5;
+  font-size: 0.88rem;
+  line-height: 1.55;
   margin: 0;
 }
 
 @media (max-width: 768px) {
   .scramble-title {
-    font-size: 2.5rem;
+    font-size: 2.3rem;
   }
   .hero-actions {
     flex-direction: column;
     width: 100%;
-    max-width: 300px;
+    max-width: 280px;
   }
 }
 </style>

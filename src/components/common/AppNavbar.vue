@@ -35,7 +35,7 @@ export default defineComponent({
         <div class="brand-icon">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
-        <span class="brand-name">Vault <span class="accent">Encrypter</span></span>
+        <span class="brand-name">Yonaikel <span class="accent">Encrypter</span></span>
       </div>
 
       <!-- Navigation Tabs (Desktop) -->
@@ -107,9 +107,9 @@ export default defineComponent({
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(10, 15, 30, 0.8);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 11, 17, 0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .navbar-inner {
@@ -129,37 +129,43 @@ export default defineComponent({
 }
 
 .brand-icon {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  color: white;
+  background: #141a26;
+  color: #f1f5f9;
   width: 36px;
   height: 36px;
   border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.2s ease;
+}
+
+.brand:hover .brand-icon {
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .brand-name {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.15rem;
+  font-weight: 600;
   color: #f8fafc;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 .brand-name .accent {
-  background: linear-gradient(135deg, #60a5fa, #c084fc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #94a3b8;
+  font-weight: 400;
+  margin-left: 0.2rem;
 }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: rgba(15, 23, 42, 0.6);
-  padding: 0.35rem;
-  border-radius: 9999px;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.3rem;
+  border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -167,25 +173,27 @@ export default defineComponent({
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.55rem 1.2rem;
-  border-radius: 9999px;
-  font-size: 0.9rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 9px;
+  font-size: 0.88rem;
   font-weight: 500;
   color: #94a3b8;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .nav-btn:hover {
   color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .nav-btn.active {
   color: #ffffff;
-  background: linear-gradient(135deg, #2563eb, #6366f1);
-  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.35);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .mobile-toggle {
@@ -200,8 +208,8 @@ export default defineComponent({
 .mobile-menu {
   display: flex;
   flex-direction: column;
-  background: rgba(15, 23, 42, 0.95);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(12, 16, 24, 0.98);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding: 1rem;
   gap: 0.5rem;
 }
@@ -211,16 +219,18 @@ export default defineComponent({
   text-align: left;
   border-radius: 8px;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   color: #cbd5e1;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .mobile-nav-btn.active {
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 
 @media (max-width: 768px) {

@@ -42,7 +42,7 @@ const handleNavigation = (tab: NavigationTab) => {
 
     <!-- Footer -->
     <footer class="app-footer">
-      <p>Vault Encrypter &bull; Sistema de Encriptación y Desencriptación Web &bull; Tecnologías AES-GCM, Base64 & Custom Layer</p>
+      <p>Yonaikel Encrypter &bull; Sistema de Encriptación y Desencriptación Web &bull; Tecnologías AES-GCM, Base64 & Custom Layer</p>
     </footer>
   </div>
 </template>
@@ -70,11 +70,12 @@ const handleNavigation = (tab: NavigationTab) => {
   z-index: 10;
   text-align: center;
   padding: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(10, 15, 30, 0.85);
-  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(8, 11, 17, 0.85);
+  backdrop-filter: blur(16px);
   color: #64748b;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
 }
 
 /* Transitions */

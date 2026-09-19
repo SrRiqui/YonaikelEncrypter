@@ -6,6 +6,10 @@ export type CryptoAlgorithmId = 'base64' | 'aes' | 'custom';
 
 export type NavigationTab = 'main' | 'encrypt' | 'decrypt';
 
+export type InputMode = 'file' | 'text';
+
+export type KeyLength = 6 | 12;
+
 export type QueueItemStatus = 'queued' | 'processing' | 'completed' | 'error';
 
 export interface MethodOption {

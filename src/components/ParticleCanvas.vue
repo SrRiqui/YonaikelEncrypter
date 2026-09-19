@@ -16,7 +16,7 @@ export default defineComponent({
     return {
       config: {
         particleCount: 4000,
-        textArray: ['Encrypt.', 'Vault.', 'Secure.', 'Protect.', 'Safe.', 'Private.', 'Yonaikel.', 'Shield.', 'Lock.'],
+        textArray: ['Encrypt.', 'Yonaikel.', 'Encrypter.', 'Secure.', 'Protect.', 'Safe.', 'Private.', 'Shield.', 'Lock.'],
         mouseRadius: 0.12,
         particleSize: 2.2,
         forceMultiplier: 0.0012,

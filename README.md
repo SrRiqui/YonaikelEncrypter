@@ -1,4 +1,4 @@
-# 🛡️ Vault Encrypter (YonaikelEncrypter)
+# 🛡️ Yonaikel Encrypter
 
 Sistema profesional de encriptación y desencriptación de archivos en tiempo real para el navegador web, desarrollado con **Vue 3**, **TypeScript**, **Vite** y aceleración por hardware con **WebGL** y **Web Crypto API**.
 
